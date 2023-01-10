@@ -1,0 +1,1 @@
+rootProject.name = "com.realityexpander.ktor-catsvdogs"
