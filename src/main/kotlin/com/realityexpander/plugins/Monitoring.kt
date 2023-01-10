@@ -9,7 +9,9 @@ import io.ktor.server.response.*
 fun Application.configureMonitoring() {
     install(CallLogging) {
         level = Level.INFO
-        filter { call -> call.request.path().startsWith("/") }
+        filter { call ->
+            call.request.path().startsWith("/")
+        }
     }
 
 }
