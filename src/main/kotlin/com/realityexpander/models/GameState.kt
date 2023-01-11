@@ -1,5 +1,8 @@
 package com.realityexpander.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class GameState(
     val playerAtTurn: Char? = 'X',
     val field: Array<Array<Char?>> = emptyField(),

@@ -1,5 +1,6 @@
 package com.realityexpander
 
+import com.realityexpander.models.CatsVDogsGame
 import com.realityexpander.plugins.*
 import io.ktor.server.application.*
 import io.ktor.server.websocket.*
@@ -14,14 +15,16 @@ fun main(args: Array<String>): Unit =
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
 fun Application.module() {
 
-    // create flow
+    val game = CatsVDogsGame()
+
+    // create flow of clients sockets
     val socketClientsFlow =
         MutableStateFlow<Map<String, WebSocketServerSession>>(mapOf())
 
     configureSockets(socketClientsFlow)
     configureSerialization()
     configureMonitoring()
-    configureRouting()
+    configureRouting(game)
 
     launch {
         socketClientsFlow.collect { socketClientMap ->

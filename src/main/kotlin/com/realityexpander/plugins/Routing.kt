@@ -1,12 +1,14 @@
 package com.realityexpander.plugins
 
+import com.realityexpander.models.CatsVDogsGame
+import com.realityexpander.socket
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
-fun Application.configureRouting() {
+fun Application.configureRouting(game: CatsVDogsGame) {
 
     routing {
-
+        socket(game)
     }
 
 
