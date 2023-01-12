@@ -23,7 +23,7 @@ fun Application.configureSockets(
 
     val clients = mutableMapOf<String, WebSocketServerSession>()
 
-    // Not needed but left in for reference
+    // Not needed but left in for reference - id is the user's id
     routing {
         webSocket("/ws-test/{id}") { // websocketSession
 

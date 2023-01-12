@@ -60,7 +60,7 @@ class CatsVDogsGame {
         }
     }
 
-    fun finishTurn(player: Char, x: Int, y: Int) {
+    fun processTurn(player: Char, x: Int, y: Int) {
         if(state.value.field[y][x] != null || state.value.winningPlayer != null) {
             return
         }

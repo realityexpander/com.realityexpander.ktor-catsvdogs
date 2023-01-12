@@ -44,7 +44,7 @@ fun Route.socket(game: CatsVDogsGame) {
                         val action = extractAction(frame.readText())
                         println("Received: $text, action: $action")
 
-                        game.finishTurn(player, action.x, action.y)
+                        game.processTurn(player, action.x, action.y)
                     }
                 }
 
