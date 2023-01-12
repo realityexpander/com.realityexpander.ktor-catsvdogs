@@ -14,7 +14,7 @@ class CatsVDogsGame {
 
     private val state = MutableStateFlow(GameState())
 
-    private val playerSockets = ConcurrentHashMap<Char, WebSocketSession>()
+    private val playerSocketsMap = ConcurrentHashMap<Char, WebSocketSession>()
     private val gameScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var delayGameJob: Job? = null
 
@@ -31,8 +31,8 @@ class CatsVDogsGame {
                 return null
             }
 
-            if(!playerSockets.containsKey(player)) {
-                playerSockets[player] = session
+            if(!playerSocketsMap.containsKey(player)) {
+                playerSocketsMap[player] = session
             }
 
             gameState.copy (
@@ -44,7 +44,7 @@ class CatsVDogsGame {
     }
 
     fun disconnectPlayer(player: Char) {
-        playerSockets.remove(player)
+        playerSocketsMap.remove(player)
         state.update { gameState ->
             gameState.copy(
                 connectedPlayers = gameState.connectedPlayers - player
@@ -53,7 +53,7 @@ class CatsVDogsGame {
     }
 
     private suspend fun broadcast(state: GameState) {
-        playerSockets.values.forEach { socket ->
+        playerSocketsMap.values.forEach { socket ->
             socket.send(
                 Json.encodeToString(state)
             )
@@ -85,7 +85,7 @@ class CatsVDogsGame {
                 playerAtTurn = if(currentPlayer == 'X') 'O' else 'X',
                 field = newField,
                 isBoardFull = isBoardFull,
-                winningPlayer = checkWinningPlayer()?.also {
+                winningPlayer = checkWinningPlayer4in5()?.also {
                     startNewRoundDelayed()
                 }
             )
@@ -96,10 +96,10 @@ class CatsVDogsGame {
     private fun startNewRoundDelayed() {
         delayGameJob?.cancel()
         delayGameJob = gameScope.launch {
-            delay(2000)
+            delay(5000)
             state.update { gameState ->
                 gameState.copy(
-                    playerAtTurn = 'X',
+//                    playerAtTurn = if(gameState.playerAtTurn == 'O') 'X' else 'O',
                     field = GameState.emptyField(),
                     winningPlayer = null,
                     isBoardFull = false
@@ -130,5 +130,275 @@ class CatsVDogsGame {
         } else {
             null
         }
+    }
+
+    private fun checkWinningPlayer4x4(): Char? {
+        val field = state.value.field
+
+        // check for 4x4
+
+        // check rows
+        for (i in 0..3) {
+            if (field[i][0] != null
+                && field[i][0] == field[i][1]
+                && field[i][1] == field[i][2]
+                && field[i][2] == field[i][3]
+            ) {
+                return field[i][0]
+            }
+        }
+
+        // check columns
+        for (i in 0..3) {
+            if (field[0][i] != null
+                && field[0][i] == field[1][i]
+                && field[1][i] == field[2][i]
+                && field[2][i] == field[3][i]
+            ) {
+                return field[0][i]
+            }
+        }
+
+        // check diagonals
+        if (field[0][0] != null
+            && field[0][0] == field[1][1]
+            && field[1][1] == field[2][2]
+            && field[2][2] == field[3][3]
+        ) {
+            return field[0][0]
+        }
+        if (field[0][3] != null
+            && field[0][3] == field[1][2]
+            && field[1][2] == field[2][1]
+            && field[2][1] == field[3][0]
+        ) {
+            return field[0][3]
+        }
+
+        return null
+    }
+
+    private fun checkWinningPlayer3in4(): Char? {
+        val field = state.value.field
+
+        // check for 3 in 4
+
+        // check rows
+        for(y in 0..3) {
+            var xCount = 0
+            var oCount = 0
+            for (x in 0..3) {
+                val char = field[y][x]
+                if (char != null) {
+                    if (char == 'X') {
+                        xCount++
+                    } else {
+                        oCount++
+                    }
+                }
+
+                if (xCount >= 3) {
+                    return 'X'
+                }
+
+                if (oCount >= 3) {
+                    return 'O'
+                }
+            }
+        }
+
+        // check columns
+        for(x in 0..3) {
+            var xCount = 0
+            var oCount = 0
+            for (y in 0..3) {
+                val char = field[y][x]
+                if (char != null) {
+                    if (char == 'X') {
+                        xCount++
+                    } else {
+                        oCount++
+                    }
+                }
+
+                if (xCount >= 3) {
+                    return 'X'
+                }
+
+                if (oCount >= 3) {
+                    return 'O'
+                }
+            }
+        }
+
+        // check diagonals (L->R)
+        for(y in -1..1) {
+            var xCount = 0
+            var oCount = 0
+            for (i in 0..3) {
+                if(i+y < 0 || i+y > 3) {
+                    continue
+                }
+                val char = field[i+y][i]
+
+                if (char != null) {
+                    if (char == 'X') {
+                        xCount++
+                    } else {
+                        oCount++
+                    }
+                }
+
+                if (xCount >= 3) {
+                    return 'X'
+                }
+
+                if (oCount >= 3) {
+                    return 'O'
+                }
+            }
+        }
+
+        // check diagonals (R->L)
+        for(y in -1..1) {
+            var xCount = 0
+            var oCount = 0
+            for (i in 0..3) {
+                if(i+y < 0 || i+y > 3) {
+                    continue
+                }
+                val char = field[i+y][3 - i]
+
+                if (char != null) {
+                    if (char == 'X') {
+                        xCount++
+                    } else {
+                        oCount++
+                    }
+                }
+
+                if (xCount >= 3) {
+                    return 'X'
+                }
+
+                if (oCount >= 3) {
+                    return 'O'
+                }
+            }
+        }
+
+        return null
+    }
+
+    private fun checkWinningPlayer4in5(): Char? {
+        val field = state.value.field
+
+        // check for 4 in 5
+
+        // check rows
+        for(y in 0..4) {
+            var xCount = 0
+            var oCount = 0
+            for (x in 0..4) {
+                val char = field[y][x]
+                if (char != null) {
+                    if (char == 'X') {
+                        xCount++
+                    } else {
+                        oCount++
+                    }
+                }
+
+                if (xCount >= 4) {
+                    return 'X'
+                }
+
+                if (oCount >= 4) {
+                    return 'O'
+                }
+            }
+        }
+
+        // check columns
+        for(x in 0..4) {
+            var xCount = 0
+            var oCount = 0
+            for (y in 0..4) {
+                val char = field[y][x]
+                if (char != null) {
+                    if (char == 'X') {
+                        xCount++
+                    } else {
+                        oCount++
+                    }
+                }
+
+                if (xCount >= 4) {
+                    return 'X'
+                }
+
+                if (oCount >= 4) {
+                    return 'O'
+                }
+            }
+        }
+
+        // check diagonals (L->R)
+        for(y in -2..2) {
+            var xCount = 0
+            var oCount = 0
+            for (i in 0..4) {
+                if(i+y < 0 || i+y > 4) {
+                    continue
+                }
+                val char = field[i+y][i]
+
+                if (char != null) {
+                    if (char == 'X') {
+                        xCount++
+                    } else {
+                        oCount++
+                    }
+                }
+
+                if (xCount >= 4) {
+                    return 'X'
+                }
+
+                if (oCount >= 4) {
+                    return 'O'
+                }
+            }
+        }
+
+        // check diagonals (R->L)
+        for(y in -2..2) {
+            var xCount = 0
+            var oCount = 0
+            for (i in 0..4) {
+                if (i + y < 0 || i + y > 4) {
+                    continue
+                }
+                val char = field[i + y][4 - i]
+
+                if (char != null) {
+                    if (char == 'X') {
+                        xCount++
+                    } else {
+                        oCount++
+                    }
+                }
+
+                if (xCount >= 4) {
+                    return 'X'
+                }
+
+                if (oCount >= 4) {
+                    return 'O'
+                }
+            }
+        }
+
+        return null
     }
 }

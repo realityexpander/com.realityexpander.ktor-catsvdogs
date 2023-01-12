@@ -12,7 +12,8 @@ data class GameState(
 ){
     companion object {
         fun emptyField(): Array<Array<Char?>> {
-            return Array(4) { Array(4) { null } }
+//            return Array(4) { Array(4) { null } } // 4x4
+            return Array(5) { Array(5) { null } }
         }
     }
 

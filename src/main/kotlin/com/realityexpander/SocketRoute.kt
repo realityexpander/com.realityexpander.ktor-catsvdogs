@@ -28,6 +28,7 @@ fun Route.socket(game: CatsVDogsGame) {
 
             try {
 
+                // Send the player their "X" or "O" status
                 outgoing.send(Frame.Text(
                     Json.encodeToString(
                         Player(
@@ -37,6 +38,7 @@ fun Route.socket(game: CatsVDogsGame) {
                     )
                 ))
 
+                // Consume events from the client
                 incoming.consumeEach { frame ->
                     if(frame is Frame.Text) {
                         val action = extractAction(frame.readText())
