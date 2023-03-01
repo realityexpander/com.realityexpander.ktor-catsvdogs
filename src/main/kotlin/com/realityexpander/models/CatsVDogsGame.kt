@@ -15,39 +15,61 @@ class CatsVDogsGame {
     private val state = MutableStateFlow(GameState())
 
     private val playerSocketsMap = ConcurrentHashMap<Char, WebSocketSession>()
+    private val playerSocketsMap2 = ConcurrentHashMap<Player2, WebSocketSession>()
     private val gameScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var delayGameJob: Job? = null
 
     init {
-        state.onEach(::broadcast).launchIn(gameScope)
+        state.onEach(::broadcast)  // Broadcast the state to all connected players automatically when it changes
+            .launchIn(gameScope)
     }
 
-    fun connectPlayer(session: WebSocketSession): Char? {
+    fun connectPlayer(
+        session: WebSocketSession,
+        userId: String
+    ): Char? {
         val isPlayerX = state.value.connectedPlayers.any { it == 'X' }
+//        val isPlayerX2 = state.value.connectedPlayers2.any { it.playerCode == 'X' }
         val player = if(isPlayerX) 'O' else 'X'
+        val player2 = Player2(userId, player)
+
+        println("connectPlayer Player: $player")
+        println("connectPlayer playerSocketsMap: $playerSocketsMap")
 
         state.update { gameState ->
+            // Check if the player is already connected
             if(state.value.connectedPlayers.contains(player)) {
                 return null
             }
+//            if(state.value.connectedPlayers2.contains(player2)) {
+//                return null
+//            }
 
             if(!playerSocketsMap.containsKey(player)) {
                 playerSocketsMap[player] = session
             }
+//            if(!playerSocketsMap2.containsKey(player2)) {
+//                playerSocketsMap2[player2] = session
+//            }
+
+            println("connectPlayer after adding Player: $playerSocketsMap")
 
             gameState.copy (
-                connectedPlayers = gameState.connectedPlayers + player
+                connectedPlayers = gameState.connectedPlayers + player,
+//                connectedPlayers2 = gameState.connectedPlayers2 + player2
             )
         }
 
         return player
     }
 
-    fun disconnectPlayer(player: Char) {
+    fun disconnectPlayer(player: Char, player2: Player2) {
         playerSocketsMap.remove(player)
         state.update { gameState ->
+            println("disconnectPlayer Player: $player")
             gameState.copy(
-                connectedPlayers = gameState.connectedPlayers - player
+                connectedPlayers = gameState.connectedPlayers - player,
+//                connectedPlayers2 = gameState.connectedPlayers2 - player2
             )
         }
     }
@@ -78,7 +100,7 @@ class CatsVDogsGame {
                 row.all { cell -> cell != null }
             }
             if(isBoardFull) {
-                startNewRoundDelayed()
+                startNewGameDelayed()
             }
 
             gameState.copy(
@@ -86,14 +108,14 @@ class CatsVDogsGame {
                 field = newField,
                 isBoardFull = isBoardFull,
                 winningPlayer = checkWinningPlayer4in5()?.also {
-                    startNewRoundDelayed()
+                    startNewGameDelayed()
                 }
             )
 
         }
     }
 
-    private fun startNewRoundDelayed() {
+    private fun startNewGameDelayed() {
         delayGameJob?.cancel()
         delayGameJob = gameScope.launch {
             delay(5000)

@@ -11,7 +11,6 @@ fun Application.configureRouting(game: CatsVDogsGame) {
         socket(game)
     }
 
-
     // Not needed but left in for reference
 //    routing {
 //        get("/") {

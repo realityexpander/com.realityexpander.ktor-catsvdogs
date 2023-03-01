@@ -8,7 +8,8 @@ data class GameState(
     val field: Array<Array<Char?>> = emptyField(),
     val winningPlayer: Char? = null,
     val isBoardFull: Boolean = false,
-    val connectedPlayers: List<Char> = emptyList()
+    val connectedPlayers: List<Char> = emptyList(),
+//    val connectedPlayers2: List<Player2> = emptyList()
 ){
     companion object {
         fun emptyField(): Array<Array<Char?>> {

@@ -2,7 +2,9 @@ package com.realityexpander
 
 import com.realityexpander.models.CatsVDogsGame
 import com.realityexpander.plugins.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.websocket.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -15,13 +17,24 @@ fun main(args: Array<String>): Unit =
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
 fun Application.module() {
 
+    install(WebSockets) {
+        pingPeriodMillis = 0 //15_000 // we impl our own ping. 0 disables the default ping.
+        timeoutMillis = 0 //15_000  // we impl our own ping. 0 disables the default ping.
+//        pingPeriod = Duration.ofSeconds(0) //Duration.ofSeconds(15)
+//        timeout = Duration.ofSeconds(15)
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
+    }
     val game = CatsVDogsGame()
+
+
+    ///////////////// EXPERIMENTS WITH POSTMAN //////////////////
 
     // create flow of clients sockets
     val socketClientsFlow =
         MutableStateFlow<Map<String, WebSocketServerSession>>(mapOf())
 
-    configureSockets(socketClientsFlow)
+    //configureSockets(socketClientsFlow)
     configureSerialization()
     configureMonitoring()
     configureRouting(game)

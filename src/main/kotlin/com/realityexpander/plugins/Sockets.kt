@@ -9,17 +9,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Duration
 
 fun Application.configureSockets(
     clientFlow: MutableStateFlow<Map<String, WebSocketServerSession>>
 ) {
-    install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(15)
-        timeout = Duration.ofSeconds(15)
-        maxFrameSize = Long.MAX_VALUE
-        masking = false
-    }
+//    install(WebSockets) {
+//        pingPeriod = Duration.ofSeconds(15)
+//        timeout = Duration.ofSeconds(15)
+//        maxFrameSize = Long.MAX_VALUE
+//        masking = false
+//    }
 
     val clients = mutableMapOf<String, WebSocketServerSession>()
 
