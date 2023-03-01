@@ -72,10 +72,10 @@ fun Route.socket(game: CatsVDogsGame) {
 
                 // Consume events from the client
                 incoming.consumeEach { frame ->
-                    println("Received: $frame")
+                    //println("Received: $frame")
                     if(frame is Frame.Text) {
                         val frameText = frame.readText()
-                        println("Received: $frameText")
+//                        println("Received: $frameText")
 
                         // Reset pongMissed if we get a pong
                         if(frameText == "pong") {
@@ -94,7 +94,7 @@ fun Route.socket(game: CatsVDogsGame) {
 
                 println("End of socket: $userId, shouldDisconnect: $shouldDisconnectPlayer")
                 if(shouldDisconnectPlayer) {
-                    println("Player disconnected: $userId")
+                    println("Player disconnected: $player, $userId")
                     game.disconnectPlayer(player, Player2(userId, player))
                 }
 
@@ -107,7 +107,7 @@ fun Route.socket(game: CatsVDogsGame) {
                 e.printStackTrace()
                 game.disconnectPlayer(player, Player2(userId, player))
             } finally {
-//                println("Player disconnected: $userId")
+                println("webSocket finally{}: $userId, shouldDisconnect: $shouldDisconnectPlayer")
 //                game.disconnectPlayer(player, Player2(userId, player))
             }
         }
@@ -135,12 +135,12 @@ fun Route.socket(game: CatsVDogsGame) {
 }
 
 private fun extractAction(message: String): MakeTurn {
-    // make turn#{json}
+    // make_turn#{"x":3,"y":0}
     val type = message.substringBefore("#")
     val payload = message.substringAfter("#")
 
     return if (type == "make_turn") {
-        Json.decodeFromString(payload)
+        Json.decodeFromString<MakeTurn>(payload)
     } else {
         MakeTurn(-1, -1)
         throw Exception("Unknown action type: $type")
